@@ -1,0 +1,19 @@
+CLIENT_USERNAME=EQnoeDaKSJez7bahOsWv1w
+CLIENT_PASSWORD=XB2bi2SUnjlkEg52Z9EmCUrlyNjUHmlk
+SUBSCRIPTION_ID=ebzv_O5CTjSvMqSCCcnvcQ
+<!-- SUBSCRIPTION_IDS=["c","YQJUfpxmTsaK4qjVDabtDw","9FvUWcyeQEmfXA2rREmu8w"] -->
+
+<!-- SUBSCRIPTION_IDS=["YQJUfpxmTsaK4qjVDabtDw"] -->
+
+SUBSCRIPTION_IDS=["ebzv_O5CTjSvMqSCCcnvcQ","YQJUfpxmTsaK4qjVDabtDw","9FvUWcyeQEmfXA2rREmu8w","1qAocMwUTbeqcJ9zMd91uA","g_AYVt7EQS2r3RhXw7GmXw","PCm72TSfT2K8fjrXsgAW3g","rC9IVUNhT--YEVirnVBK_Q"]
+
+<!-- TOKEN=abc123 -->
+
+
+OAUTH_URL=https://zoomdev.us/oauth/token
+WS_URL=wss://devwsdeliver.zoomdev.us/ws
+
+
+
+
+

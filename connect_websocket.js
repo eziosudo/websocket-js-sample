@@ -70,13 +70,19 @@ async function createWebSocket(currentWsUrl) {
 
 // Add event listeners to WebSocket
 function addWebSocketListeners(socket) {
-    socket.addEventListener('open', () => {
+    socket.addEventListener('open', (event) => {
+        // Access and log the tracking ID from headers
+        const trackingId = socket._socket?.remoteHeaders?.['x-zm-trackingid'];
         console.log('WebSocket connection opened.');
+        if (trackingId) {
+            console.log('Connection tracking ID:', trackingId);
+        }
         startHeartbeat(socket);
     });
 
     socket.addEventListener('message', (event) => {
-        console.log('Message received from WebSocket:', event.data);
+        const trackingId = socket._socket?.remoteHeaders?.['x-zm-trackingid'];
+        console.log(`Message received from WebSocket [tracking ID: ${trackingId || 'N/A'}]:`, event.data);
     });
 
     socket.addEventListener('close', (event) => {
@@ -140,3 +146,4 @@ if (require.main === module) {
         }
     })();
 }
+
