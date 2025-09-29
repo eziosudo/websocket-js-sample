@@ -1,25 +1,88 @@
-require('dotenv').config({ path: './.envDev' });
 const WebSocket = require('ws');
+
+// Parse command line arguments to determine environment
+function parseEnvironment() {
+    const args = process.argv.slice(2);
+    let environment = 'dev'; // default environment
+    
+    for (const arg of args) {
+        if (arg.startsWith('-Denv=')) {
+            environment = arg.split('=')[1];
+            break;
+        }
+    }
+    
+    return environment;
+}
+
+// Load environment configuration based on the specified environment
+function loadEnvironmentConfig(env) {
+    let envFile;
+    switch (env.toLowerCase()) {
+        case 'dev':
+            envFile = './.envDev';
+            break;
+        case 'go':
+            envFile = './.envGo';
+            break;
+        case 'prod':
+            envFile = './.envProd';
+            break;
+        default:
+            throw new Error(`Unsupported environment: ${env}. Supported environments: dev, go, prod`);
+    }
+    
+    console.log(`Loading environment configuration from: ${envFile}`);
+    require('dotenv').config({ path: envFile });
+    return envFile;
+}
+
+// Parse subscription IDs from environment variable (supports both JSON array and comma-separated string)
+function parseSubscriptionIds() {
+    const subscriptionIdsStr = process.env.SUBSCRIPTION_IDS;
+    if (!subscriptionIdsStr) {
+        throw new Error('SUBSCRIPTION_IDS environment variable is required but not defined.');
+    }
+    
+    let subscriptionIds = [];
+    try {
+        // Try parsing as JSON array first
+        if (subscriptionIdsStr.trim().startsWith('[')) {
+            subscriptionIds = JSON.parse(subscriptionIdsStr);
+            if (!Array.isArray(subscriptionIds)) {
+                throw new Error('SUBSCRIPTION_IDS must be an array');
+            }
+        } else {
+            // Parse as comma-separated string
+            subscriptionIds = subscriptionIdsStr.split(',').map(id => id.trim()).filter(id => id.length > 0);
+        }
+        
+        if (subscriptionIds.length === 0) {
+            throw new Error('SUBSCRIPTION_IDS must contain at least one subscription ID');
+        }
+        
+        console.log(`Loaded ${subscriptionIds.length} subscription IDs:`, subscriptionIds);
+        return subscriptionIds;
+    } catch (error) {
+        console.error('Error parsing SUBSCRIPTION_IDS:', error);
+        throw new Error(`Invalid SUBSCRIPTION_IDS format. Expected JSON array or comma-separated string. Error: ${error.message}`);
+    }
+}
+
+// Initialize environment and configuration
+const environment = parseEnvironment();
+const envFile = loadEnvironmentConfig(environment);
 
 // Check if required environment variables are defined
 const requiredEnvVars = ['CLIENT_USERNAME', 'CLIENT_PASSWORD', 'SUBSCRIPTION_IDS', 'WS_URL', 'OAUTH_URL'];
 requiredEnvVars.forEach((envVar) => {
     if (!process.env[envVar]) {
-        throw new Error(`Environment variable ${envVar} is required but not defined.`);
+        throw new Error(`Environment variable ${envVar} is required but not defined in ${envFile}.`);
     }
 });
 
 // Parse subscription IDs from environment variable
-let subscriptionIds = [];
-try {
-    subscriptionIds = JSON.parse(process.env.SUBSCRIPTION_IDS);
-    if (!Array.isArray(subscriptionIds) || subscriptionIds.length === 0) {
-        throw new Error('SUBSCRIPTION_IDS must be a non-empty JSON array');
-    }
-} catch (error) {
-    console.error('Error parsing SUBSCRIPTION_IDS:', error);
-    throw error;
-}
+const subscriptionIds = parseSubscriptionIds();
 
 // Map to store active WebSocket connections
 const activeConnections = new Map();
@@ -202,10 +265,17 @@ module.exports = { connectMultipleWebSockets, closeAllConnections };
 if (require.main === module) {
     (async () => {
         try {
+            console.log(`Running with environment: ${environment}`);
+            console.log(`Using configuration file: ${envFile}`);
+            console.log(`OAuth URL: ${process.env.OAUTH_URL}`);
+            console.log(`WebSocket URL: ${process.env.WS_URL}`);
+            console.log('---');
+            
             const connections = await connectMultipleWebSockets();
             console.log(`Successfully connected to ${connections.length} WebSockets.`);
         } catch (error) {
             console.error("Error:", error);
+            process.exit(1);
         }
     })();
 }
